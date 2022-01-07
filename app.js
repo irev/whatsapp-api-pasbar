@@ -37,7 +37,7 @@ app.get('/', (req, res) => {
 });
 
 const client = new Client({
-  restartOnAuthFail: true,
+  restartOnAuthFail: false,
   puppeteer: {
     headless: true,
     args: [
