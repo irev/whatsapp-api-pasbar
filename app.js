@@ -243,7 +243,7 @@ app.use(function (req, res, next) {
   // to the API (e.g. in case you use sessions)
   res.setHeader('Access-Control-Allow-Credentials', true);
   res.setHeader('Content-Type', 'application/json');
-  //res.setHeader('Access-Control-Max-Age', '1000');
+  res.setHeader('Access-Control-Max-Age', '1000');
   // Pass to next layer of middleware
   next();
 });
