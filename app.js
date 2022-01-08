@@ -1,14 +1,23 @@
-const { Client, MessageMedia } = require('whatsapp-web.js');
+const {
+  Client,
+  MessageMedia
+} = require('whatsapp-web.js');
 const express = require('express');
-const { body, validationResult } = require('express-validator');
+const {
+  body,
+  validationResult
+} = require('express-validator');
 const socketIO = require('socket.io');
 const qrcode = require('qrcode');
 const http = require('http');
 const fs = require('fs');
-const { phoneNumberFormatter } = require('./helpers/formatter');
+const {
+  phoneNumberFormatter
+} = require('./helpers/formatter');
 const fileUpload = require('express-fileupload');
 const axios = require('axios');
 const mime = require('mime-types');
+const validUrl = require('valid-url');
 
 const port = process.env.PORT || 8000;
 
@@ -21,6 +30,7 @@ app.use(express.urlencoded({
   extended: true
 }));
 app.use(fileUpload({
+  useTempFiles: false,
   debug: true
 }));
 
@@ -37,7 +47,7 @@ app.get('/', (req, res) => {
 });
 
 const client = new Client({
-  restartOnAuthFail: false,
+  restartOnAuthFail: true,
   puppeteer: {
     headless: true,
     args: [
@@ -59,6 +69,8 @@ client.on('message', msg => {
     msg.reply('pong');
   } else if (msg.body == 'morning') {
     msg.reply('selamat pagi');
+  } else if (msg.body == 'google') {
+    msg.reply('https://www.google.com/');
   } else if (msg.body == '!groups') {
     client.getChats().then(chats => {
       const groups = chats.filter(chat => chat.isGroup);
@@ -94,7 +106,7 @@ client.on('message', msg => {
 
         // Get the file extension by mime-type
         const extension = mime.extension(media.mimetype);
-        
+
         // Filename: change as you want! 
         // I will use the time for this example
         // Why not use media.filename? Because the value is not certain exists
@@ -104,7 +116,9 @@ client.on('message', msg => {
 
         // Save to file
         try {
-          fs.writeFileSync(fullFilename, media.data, { encoding: 'base64' }); 
+          fs.writeFileSync(fullFilename, media.data, {
+            encoding: 'base64'
+          });
           console.log('File downloaded successfully!', fullFilename);
         } catch (err) {
           console.log('Failed to save the file:', err);
@@ -117,7 +131,7 @@ client.on('message', msg => {
 client.initialize();
 
 // Socket IO
-io.on('connection', function(socket) {
+io.on('connection', function (socket) {
   socket.emit('message', 'Connecting...');
 
   client.on('qr', (qr) => {
@@ -138,22 +152,22 @@ io.on('connection', function(socket) {
     socket.emit('message', 'Whatsapp is authenticated!');
     console.log('AUTHENTICATED', session);
     sessionCfg = session;
-    fs.writeFile(SESSION_FILE_PATH, JSON.stringify(session), function(err) {
+    fs.writeFile(SESSION_FILE_PATH, JSON.stringify(session), function (err) {
       if (err) {
         console.error(err);
       }
     });
   });
 
-  client.on('auth_failure', function(session) {
+  client.on('auth_failure', function (session) {
     socket.emit('message', 'Auth failure, restarting...');
   });
 
   client.on('disconnected', (reason) => {
     socket.emit('message', 'Whatsapp is disconnected!');
-    fs.unlinkSync(SESSION_FILE_PATH, function(err) {
-        if(err) return console.log(err);
-        console.log('Session file deleted!');
+    fs.unlinkSync(SESSION_FILE_PATH, function (err) {
+      if (err) return console.log(err);
+      console.log('Session file deleted!');
     });
     client.destroy();
     client.initialize();
@@ -161,7 +175,7 @@ io.on('connection', function(socket) {
 });
 
 
-const checkRegisteredNumber = async function(number) {
+const checkRegisteredNumber = async function (number) {
   const isRegistered = await client.isRegisteredUser(number);
   return isRegistered;
 }
@@ -209,24 +223,53 @@ app.post('/send-message', [
   });
 });
 
-// Send media
-app.post('/send-media', async (req, res) => {
-  const number = phoneNumberFormatter(req.body.number);
-  const caption = req.body.caption;
-  const fileUrl = req.body.file;
 
-  // const media = MessageMedia.fromFilePath('./image-example.png');
-  // const file = req.files.file;
-  // const media = new MessageMedia(file.mimetype, file.data.toString('base64'), file.name);
-  let mimetype;
-  const attachment = await axios.get(fileUrl, {
-    responseType: 'arraybuffer'
-  }).then(response => {
-    mimetype = response.headers['content-type'];
-    return response.data.toString('base64');
+// test
+app.post('/s', (req, res) => {
+  const fileUrl = req.body.file;
+  res.send('hello from simple server :) ' + fileUrl + ' ' + req.files.file.tempFilePath + ' ' + req.files.file.md5)
+}); 
+
+
+// Send media
+app.post('/send-media', [
+  body('number').notEmpty(),
+  body('file').notEmpty(),
+], async (req, res) => {
+  const errors = validationResult(req).formatWith(({
+    msg
+  }) => {
+    return msg;
   });
 
-  const media = new MessageMedia(mimetype, attachment, 'Media');
+  if (!errors.isEmpty()) {
+    return res.status(422).json({
+      status: false,
+      message: errors.mapped()
+    });
+  }
+  const number = phoneNumberFormatter(req.body.number);
+  const caption = req.body.caption;
+  const fileUrl = req.body.file_url;
+  const file = req.files.file;
+
+  //const media = MessageMedia.fromFilePath('./image-example.png');
+  if (validUrl.isUri(fileUrl)) {
+            // Send Images from url
+            let mimetype;
+    const attachment = await axios.get(fileUrl, {
+              responseType: 'arraybuffer'
+            }).then(response => {
+              mimetype = response.headers['content-type'];
+              return response.data.toString('base64');
+            });
+            const media = new MessageMedia(mimetype, attachment, 'Media');
+            console.log('Looks like an URI');
+  } else {
+            // send images from upload or file 
+            const media = new MessageMedia(file.mimetype, file.data.toString('base64'), file.name);
+            console.log('Not a URI');
+  }
 
   client.sendMessage(number, media, {
     caption: caption
@@ -243,9 +286,9 @@ app.post('/send-media', async (req, res) => {
   });
 });
 
-const findGroupByName = async function(name) {
+const findGroupByName = async function (name) {
   const group = await client.getChats().then(chats => {
-    return chats.find(chat => 
+    return chats.find(chat =>
       chat.isGroup && chat.name.toLowerCase() == name.toLowerCase()
     );
   });
@@ -255,7 +298,9 @@ const findGroupByName = async function(name) {
 // Send message to group
 // You can use chatID or group name, yea!
 app.post('/send-group-message', [
-  body('id').custom((value, { req }) => {
+  body('id').custom((value, {
+    req
+  }) => {
     if (!value && !req.body.name) {
       throw new Error('Invalid value, you can use `id` or `name`');
     }
@@ -334,7 +379,7 @@ app.post('/clear-message', [
   }
 
   const chat = await client.getChatById(number);
-  
+
   chat.clearMessages().then(status => {
     res.status(200).json({
       status: true,
@@ -348,6 +393,6 @@ app.post('/clear-message', [
   })
 });
 
-server.listen(port, function() {
+server.listen(port, function () {
   console.log('App running on *: ' + port);
 });
