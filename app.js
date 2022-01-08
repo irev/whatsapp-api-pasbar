@@ -34,6 +34,7 @@ app.use(fileUpload({
   debug: true
 }));
 
+
 const SESSION_FILE_PATH = './whatsapp-session.json';
 let sessionCfg;
 if (fs.existsSync(SESSION_FILE_PATH)) {
@@ -41,6 +42,13 @@ if (fs.existsSync(SESSION_FILE_PATH)) {
 }
 
 app.get('/', (req, res) => {
+   res.set({
+    //'Access-Control-Allow-Origin': '*',
+    //'Access-Control-Allow-Methods': 'GET, POST, OPTIONS, PUT, PATCH, DELETE',
+    //'Access-Control-Allow-Headers': 'X-Requested-With,content-type',
+    //'Access-Control-Allow-Credentials': true,
+    'Content-Type': 'text/html; charset=UTF-8',
+  });
   res.sendFile('index.html', {
     root: __dirname
   });
@@ -223,6 +231,46 @@ app.post('/send-message', [
   });
 });
 
+<<<<<<< HEAD
+=======
+
+
+// Add headers before the routes are defined
+app.use(function (req, res, next) {
+
+    // Website you wish to allow to connect
+    res.setHeader('Access-Control-Allow-Origin', '*');
+
+    // Request methods you wish to allow
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
+
+    // Request headers you wish to allow
+    res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type');
+
+    // Set to true if you need the website to include cookies in the requests sent
+    // to the API (e.g. in case you use sessions)
+    res.setHeader('Access-Control-Allow-Credentials', true);
+  
+     res.setHeader('Content-Type', 'application/json');
+     res.setHeader('Access-Control-Max-Age': '1000');
+
+    // Pass to next layer of middleware
+    next();
+});
+
+// Send media
+app.post('/send-media', async (req, res) => {
+  res.set({
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS, PUT, PATCH, DELETE',
+    'Access-Control-Allow-Headers': 'X-Requested-With,content-type',
+    'Access-Control-Allow-Credentials': true,
+    'Content-Type': 'application/json',
+  });
+  const number = phoneNumberFormatter(req.body.number);
+  const caption = req.body.caption;
+  const fileUrl = req.body.file;
+>>>>>>> 39e33240532527a589a280c4f7a9149dabab90a5
 
 // test
 app.post('/s', (req, res) => {
