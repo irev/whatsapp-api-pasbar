@@ -238,9 +238,9 @@ app.post('/send-message', [
 app.post('/send-media', async (req, res) => {
   res.set({
     'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE',
-    'Access-Control-Allow-Headers', 'X-Requested-With,content-type',
-    'Access-Control-Allow-Credentials', true,
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS, PUT, PATCH, DELETE',
+    'Access-Control-Allow-Headers': 'X-Requested-With,content-type',
+    'Access-Control-Allow-Credentials': true,
     'Content-Type': 'application/json',
   });
   const number = phoneNumberFormatter(req.body.number);
