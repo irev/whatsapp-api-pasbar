@@ -238,23 +238,27 @@ app.use(function (req, res, next) {
   // Request methods you wish to allow
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
   // Request headers you wish to allow
-  
+  res.setHeader('Lapor', 'x-lapor');
+  res.setHeader('Content-Type', 'application/json');
   //res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type');
-  res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Lapor');
   // Set to true if you need the website to include cookies in the requests sent
   // to the API (e.g. in case you use sessions)
   res.setHeader('Access-Control-Allow-Credentials', true);
-  res.setHeader('Vary: Access-Control-Request-Headers');
   res.setHeader('Content-Type', 'application/json');
-  res.setHeader('Access-Control-Max-Age', '1000');
+  res.setHeader('Access-Control-Max-Age', '2000');
   // Pass to next layer of middleware
   next();
 });
 
 // test
 app.post('/s', (req, res) => {
-  const fileUrl = req.body.file;
-  res.send('hello from simple server :) ' + fileUrl + ' ' + req.files.file.tempFilePath + ' ' + req.files.file.md5)
+  const number = req.body.number;
+  res.send('hello from simple server :) ' + number )
+  res.send({
+    msg: "Hello, World"
+  });
+
 });
 
 
