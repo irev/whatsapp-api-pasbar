@@ -42,7 +42,7 @@ if (fs.existsSync(SESSION_FILE_PATH)) {
 }
 
 app.get('/', (req, res) => {
-   res.set({
+  res.set({
     //'Access-Control-Allow-Origin': '*',
     //'Access-Control-Allow-Methods': 'GET, POST, OPTIONS, PUT, PATCH, DELETE',
     //'Access-Control-Allow-Headers': 'X-Requested-With,content-type',
@@ -231,8 +231,6 @@ app.post('/send-message', [
   });
 });
 
-<<<<<<< HEAD
-=======
 
 
 // Add headers before the routes are defined
@@ -250,9 +248,9 @@ app.use(function (req, res, next) {
     // Set to true if you need the website to include cookies in the requests sent
     // to the API (e.g. in case you use sessions)
     res.setHeader('Access-Control-Allow-Credentials', true);
-  
-     res.setHeader('Content-Type', 'application/json');
-     res.setHeader('Access-Control-Max-Age': '1000');
+
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Access-Control-Max-Age', '1000');
 
     // Pass to next layer of middleware
     next();
@@ -270,13 +268,12 @@ app.post('/send-media', async (req, res) => {
   const number = phoneNumberFormatter(req.body.number);
   const caption = req.body.caption;
   const fileUrl = req.body.file;
->>>>>>> 39e33240532527a589a280c4f7a9149dabab90a5
 
 // test
 app.post('/s', (req, res) => {
   const fileUrl = req.body.file;
   res.send('hello from simple server :) ' + fileUrl + ' ' + req.files.file.tempFilePath + ' ' + req.files.file.md5)
-}); 
+});
 
 
 // Send media
@@ -303,20 +300,20 @@ app.post('/send-media', [
 
   //const media = MessageMedia.fromFilePath('./image-example.png');
   if (validUrl.isUri(fileUrl)) {
-            // Send Images from url
-            let mimetype;
+    // Send Images from url
+    let mimetype;
     const attachment = await axios.get(fileUrl, {
-              responseType: 'arraybuffer'
-            }).then(response => {
-              mimetype = response.headers['content-type'];
-              return response.data.toString('base64');
-            });
-            const media = new MessageMedia(mimetype, attachment, 'Media');
-            console.log('Looks like an URI');
+      responseType: 'arraybuffer'
+    }).then(response => {
+      mimetype = response.headers['content-type'];
+      return response.data.toString('base64');
+    });
+    const media = new MessageMedia(mimetype, attachment, 'Media');
+    console.log('Looks like an URI');
   } else {
-            // send images from upload or file 
-            const media = new MessageMedia(file.mimetype, file.data.toString('base64'), file.name);
-            console.log('Not a URI');
+    // send images from upload or file 
+    const media = new MessageMedia(file.mimetype, file.data.toString('base64'), file.name);
+    console.log('Not a URI');
   }
 
   client.sendMessage(number, media, {
